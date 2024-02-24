@@ -1,5 +1,5 @@
 #
-# Escriba la función load_input que recive como parámetro un folder y retorna
+# Escriba la función load_input que recibe como parámetro un folder y retorna
 # una lista de tuplas donde el primer elemento de cada tupla es el nombre del
 # archivo y el segundo es una línea del archivo. La función convierte a tuplas
 # todas las lineas de cada uno de los archivos. La función es genérica y debe
@@ -16,7 +16,7 @@
 
 # Librería Glob para leer documentos
 
-import glob
+import glob             # Permite leer el contenido de una carpeta
 import fileinput
 
 def load_input(input_directory):
@@ -27,10 +27,6 @@ def load_input(input_directory):
         for line in f:
             sequence.append((fileinput.filename(), line))
     return sequence
-
-#filenames = load_input("input")
-#print(filenames)
-
 
 #
 # Escriba una función llamada maper que recibe una lista de tuplas de la
@@ -43,17 +39,18 @@ def load_input(input_directory):
 #     ('is', 1),
 #     ...
 #   ]
-#
+
 def mapper(sequence):
     
     new_sequence = []
-    for _, text in sequence: # _ ---> Variable en Python que guarda el último resultado
+    for _, text in sequence: # _ ---> Variable en Python que guarda el último resultado (Imprime las segundas partes de la tupla)
         words = text.split()
         for word in words:
+            word = word.lower()
+            word = word.replace(",","")
+            word = word.replace(".","")
             new_sequence.append((word,1))
     return new_sequence
-
-
 
 
 #
@@ -66,17 +63,10 @@ def mapper(sequence):
 #     ('Analytics', 1),
 #     ...
 #   ]
-#
+
 def shuffle_and_sort(sequence):
     sorted_sequence = sorted(sequence, key=lambda x: x[0]) # Lamnda ---> Función anónima
     return sorted_sequence
-
-sequence = load_input("input")
-sequence = mapper(sequence)
-sequence = shuffle_and_sort(sequence)
-print(sequence)
-    
-
 
 #
 # Escriba la función reducer, la cual recibe el resultado de shuffle_and_sort y
@@ -85,15 +75,33 @@ print(sequence)
 # texto.
 #
 def reducer(sequence):
-    pass
-
-
+    
+    diccionario = {}
+    for key, value in sequence:
+        if key not in diccionario.keys():
+            diccionario[key] = []
+        diccionario[key].append(value)
+    
+    new_sequence = []
+    for key, value in diccionario.items():
+        tupla = (key, sum(value))
+        new_sequence.append(tupla)
+        
+    return new_sequence
+        
 #
 # Escriba la función create_ouptput_directory que recibe un nombre de directorio
 # y lo crea. Si el directorio existe, la función falla.
 #
-def create_ouptput_directory(output_directory):
-    pass
+import os.path #Permite hacer operaciones de archivos
+
+def create_output_directory(output_directory):
+    
+    if os.path.exists(output_directory):
+        raise FileExistsError(f"The directory '{output_directory}' already exists.")
+    
+    else:
+        os.makedirs(output_directory)
 
 
 #
@@ -105,26 +113,34 @@ def create_ouptput_directory(output_directory):
 # separados por un tabulador.
 #
 def save_output(output_directory, sequence):
-    pass
-
+    with open(output_directory + "/part-00000", "w") as file:
+        for key, value in sequence:
+            file.write(f"{key}\t{value}\n")
+            
 
 #
 # La siguiente función crea un archivo llamado _SUCCESS en el directorio
 # entregado como parámetro.
 #
 def create_marker(output_directory):
-    pass
-
-
+    
+    with open(output_directory + "/_SUCCESS", "w") as file:
+        file.write("")
+    
 #
 # Escriba la función job, la cual orquesta las funciones anteriores.
 #
 def job(input_directory, output_directory):
-    pass
-
-
-# if __name__ == "__main__":
-#     job(
-#         "input",
-#         "output",
-#     )
+    sequence = load_input("input")
+    sequence = mapper(sequence)
+    sequence = shuffle_and_sort(sequence)
+    sequence = reducer(sequence)
+    create_output_directory("output")
+    save_output("output", sequence)
+    create_marker("output")
+    
+if __name__ == "__main__":
+    job(
+        "input",
+        "output",
+    )
